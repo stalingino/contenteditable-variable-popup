@@ -1,0 +1,178 @@
+
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>variable bubbles</title>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href="https://fonts.googleapis.com/css?family=Montserrat:300,400,700|Roboto:300,400,700" rel="stylesheet">
+    <script src="https://code.jquery.com/jquery-3.6.0.slim.min.js" integrity="sha256-u7e5khyithlIdTpu22PHhENmPcRdFiHRjhAuHcs05RI=" crossorigin="anonymous"></script>
+    <style>
+      body {
+        font-family: Roboto;
+        padding: 50px !important;
+        background-color: #232323;
+        filter: invert(1);
+      }
+      #edit, #editDuplicate {
+        width: 60%;
+        height: 100px;
+        border: 2px solid orange;
+        padding: 5px;
+      }
+      #preHtml, #preText {
+        border: 1px solid gray;
+        font-family: monospace;
+      }
+      #preHtml {
+        overflow: scroll;
+      }
+      #popBase {
+        position: relative;
+        width: 0;
+        height: 15px;
+      }
+      #pop {
+        position: absolute;
+        top: 18px;
+        left: 0;
+        width: 250px;
+        height: 200px;
+        border: 1px solid gray;
+        z-index: 10000;
+        background-color: white;
+        border: 1px solid gray;
+        border-radius: 7px;
+        overflow: scroll;
+      }
+      span.var::before {
+        content: '[';
+      }
+      span.var::after {
+        content: ']';
+      }
+      span.var:hover {
+        background-color: rgb(244, 231, 255);
+        border-radius: 8px;
+      }
+      #pop ul {
+        margin: 0;
+        padding: 5px 0;
+      }
+      #pop ul li {
+        list-style-type: none;
+        padding: 5px 10px;
+        cursor: pointer;
+      }
+      #pop ul li:hover {
+        background-color: bisque;
+      }
+    </style>
+  </head>
+  <body style="margin:0;padding:0">
+    Editor:
+    <div id="edit" contenteditable="true">
+      Dear <span contenteditable="false" class="var" data-value="${customer.name}" data-label="Customer Name">Customer Name</span>,
+      Your loan for amount <span contenteditable="false" class="var" data-value="${loan.amount}" data-label="Loan Amount">Loan Amount</span> has been sanctioned.
+    </div>
+    <br>
+    <button onclick="preview()">Re-render</button>
+    <p></p>
+    Rendered clone:
+    <div id="editClone" ></div>
+    <br>
+    HTML value:
+    <p id="preHtml"></p>
+    Text value:
+    <p id="preText"></p>
+    <br>
+    Reproduced from value:
+    <div id="editDuplicate" contenteditable="true"></div>
+    <br>
+    To be hidden popup: <br>
+    <span id="popBase">
+      <span class="filter"></span>
+      <div id="pop">
+        <ul>
+          <li data-value="loan.amount">Loan Amount</li>
+          <li data-value="loan?.tenure">Tenure</li>
+          <li data-value="customer.name">Customer Name</li>
+          <li data-value="loan.amount">Loan Amount</li>
+          <li data-value="loan?.tenure">Tenure</li>
+          <li data-value="customer.name">Customer Name</li>
+          <li data-value="loan.amount">Loan Amount</li>
+          <li data-value="loan?.tenure">Tenure</li>
+          <li data-value="customer.name">Customer Name</li>
+          <li data-value="loan.amount">Loan Amount</li>
+          <li data-value="loan?.tenure">Tenure</li>
+          <li data-value="customer.name">Customer Name</li>
+          <li data-value="loan.amount">Loan Amount</li>
+          <li data-value="loan?.tenure">Tenure</li>
+          <li data-value="customer.name">Customer Name</li>
+          <li data-value="loan.amount">Loan Amount</li>
+          <li data-value="loan?.tenure">Tenure</li>
+          <li data-value="customer.name">Customer Name</li>
+        </ul>
+      </div>
+    </span>
+    <script>
+      var good = "some"
+      var vars = {
+        "Loan Amount": "loan.amount",
+        "Tenure": "loan?.tenure",
+        "Customer Name": "customer.name"
+      }
+      var revvars = {
+        "loan.amount": "Loan Amount",
+        "loan?.tenure": "Tenure",
+        "customer.name": "Customer Name"
+      }
+      document.getElementById("edit").onkeydown = function(e) {
+        if (e.ctrlKey && e.keyCode == 32 || e.key == '$') {
+          showPop(e.key)
+        }
+      }
+      var range;
+      function showPop(k) {
+        range = window.getSelection().getRangeAt(0)
+        console.log(range.startOffset + ":" + range.endOffset)
+        var pn = range.commonAncestorContainer.parentNode
+        if (pn.getAttribute('contenteditable') != 'false') {
+          var pbj = $('#popBase')
+          range.insertNode(pbj[0])
+          $('#popBase li').one('click', function(e) {
+            var v = this.getAttribute('data-value')
+            var pbj = $('#popBase').replaceWith(`<span contenteditable="false" class="var" data-value="\${${v}}" data-label="${this.innerText}">${this.innerText}</span>`)
+            document.body.appendChild(pbj[0])
+            pbj.hide()
+          })
+          pbj.show()
+        }
+      }
+      function preview() {
+        var edit = $('#edit');
+        var editClone = $('#editClone');
+        $('#editClone').html(edit.html())
+        $('#editClone span.var').replaceWith(function() {return $(this).attr('data-value')})
+        $('#preHtml').text(editClone.html())
+        var notif = editClone.text()
+        $('#preText').text(notif)
+        var newnotif = notif.replace(/\$\{(.+)\}/g, function(match, p1, offset, string) {
+          return `<span contenteditable="false" class="var" data-value="\${${p1}}" data-label="${revvars[p1]}">${revvars[p1]}</span>`
+        })
+        $('#editDuplicate').html(newnotif)
+      }
+      $('body').on('keyup', function(e) {
+        if (e.key == "Escape") {
+          var pbj = $('#popBase')
+          if (pbj.is(":visible")) {
+            pbj[0].parentNode.removeChild(pbj[0])
+            document.body.appendChild(pbj[0])
+            pbj.hide()
+          }
+        }
+      })
+      preview()
+    </script>
+  </body>
+</html>
