@@ -11,8 +11,8 @@
       body {
         font-family: Roboto;
         padding: 50px !important;
-        background-color: #232323;
-        filter: invert(1);
+        /* background-color: #232323; */
+        /* filter: invert(1); */
       }
       #edit, #editDuplicate {
         width: 60%;
@@ -28,11 +28,14 @@
         overflow: scroll;
       }
       #popBase {
+        display: none;
+      }
+      #popBase, #pop-base {
         position: relative;
         width: 0;
         height: 15px;
       }
-      #pop {
+      .pop {
         position: absolute;
         top: 18px;
         left: 0;
@@ -55,16 +58,16 @@
         background-color: rgb(244, 231, 255);
         border-radius: 8px;
       }
-      #pop ul {
+      .pop ul {
         margin: 0;
         padding: 5px 0;
       }
-      #pop ul li {
+      .pop ul li {
         list-style-type: none;
         padding: 5px 10px;
         cursor: pointer;
       }
-      #pop ul li:hover {
+      .pop ul li:hover {
         background-color: bisque;
       }
     </style>
@@ -91,8 +94,8 @@
     <br>
     To be hidden popup: <br>
     <span id="popBase">
-      <span class="filter"></span>
-      <div id="pop">
+      <span contenteditable="true" class="filter">ok</span>
+      <div class="pop">
         <ul>
           <li data-value="loan.amount">Loan Amount</li>
           <li data-value="loan?.tenure">Tenure</li>
@@ -138,15 +141,17 @@
         console.log(range.startOffset + ":" + range.endOffset)
         var pn = range.commonAncestorContainer.parentNode
         if (pn.getAttribute('contenteditable') != 'false') {
-          var pbj = $('#popBase')
+          var pbj = $('#popBase').clone(true).attr('id', 'pop-base')
           range.insertNode(pbj[0])
-          $('#popBase li').one('click', function(e) {
+          $('#pop-base li').one('click', function(e) {
             var v = this.getAttribute('data-value')
-            var pbj = $('#popBase').replaceWith(`<span contenteditable="false" class="var" data-value="\${${v}}" data-label="${this.innerText}">${this.innerText}</span>`)
-            document.body.appendChild(pbj[0])
-            pbj.hide()
+            $('#pop-base').replaceWith(`<span contenteditable="false" class="var" data-value="\${${v}}" data-label="${this.innerText}">${this.innerText}</span>`)
           })
           pbj.show()
+          pbj.ready(() => {
+            window.getSelection().empty()
+            $('#pop-base .filter').focus()
+          })
         }
       }
       function preview() {
@@ -162,15 +167,16 @@
         })
         $('#editDuplicate').html(newnotif)
       }
-      $('body').on('keyup', function(e) {
-        if (e.key == "Escape") {
-          var pbj = $('#popBase')
+      function hidePop() {
+        var pbj = $('#pop-base')
           if (pbj.is(":visible")) {
             pbj[0].parentNode.removeChild(pbj[0])
-            document.body.appendChild(pbj[0])
-            pbj.hide()
           }
-        }
+      }
+      $('body').on('keyup', function(e) {
+        if (e.key == "Escape") hidePop()
+      }).on('click', function(e) {
+        if (!$(this).parents('#pop-base').length) hidePop()
       })
       preview()
     </script>
