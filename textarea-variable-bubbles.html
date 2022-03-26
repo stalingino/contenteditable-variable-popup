@@ -14,18 +14,18 @@
         /* background-color: #232323; */
         /* filter: invert(1); */
       }
-      #edit, #editDuplicate {
-        width: 60%;
+      #edit, #editDuplicate, #htmlDuplicate {
+        width: 600px;
         height: 100px;
         border: 2px solid orange;
         padding: 5px;
+        background-color: white;
       }
       #preHtml, #preText {
         border: 1px solid gray;
         font-family: monospace;
-      }
-      #preHtml {
-        overflow: scroll;
+        width: 600px;
+        padding: 5px;
       }
       #popBase {
         display: none;
@@ -34,6 +34,7 @@
         position: relative;
         width: 0;
         height: 15px;
+        background-color: inherit;
       }
       .pop {
         position: absolute;
@@ -43,7 +44,7 @@
         height: 200px;
         border: 1px solid gray;
         z-index: 10000;
-        background-color: white;
+        background-color: inherit;
         border: 1px solid gray;
         border-radius: 7px;
         overflow: scroll;
@@ -66,9 +67,10 @@
         list-style-type: none;
         padding: 5px 10px;
         cursor: pointer;
+        position: relative;
       }
       .pop ul li:hover {
-        background-color: bisque;
+        filter: invert(.6);
       }
     </style>
   </head>
@@ -78,19 +80,16 @@
       Dear <span contenteditable="false" class="var" data-value="${customer.name}" data-label="Customer Name">Customer Name</span>,
       Your loan for amount <span contenteditable="false" class="var" data-value="${loan.amount}" data-label="Loan Amount">Loan Amount</span> has been sanctioned.
     </div>
-    <br>
-    <button onclick="preview()">Re-render</button>
-    <p></p>
-    Rendered clone:
-    <div id="editClone" ></div>
-    <br>
+    <p><button onclick="preview()">Re-render</button></p>
     HTML value:
     <p id="preHtml"></p>
     Text value:
     <p id="preText"></p>
-    <br>
-    Reproduced from value:
+    Reproduced from Text:
     <div id="editDuplicate" contenteditable="true"></div>
+    <br>
+    Reproduced from HTML:
+    <div id="htmlDuplicate" contenteditable="true"></div>
     <br>
     To be hidden popup: <br>
     <span id="popBase">
@@ -156,16 +155,20 @@
       }
       function preview() {
         var edit = $('#edit');
-        var editClone = $('#editClone');
-        $('#editClone').html(edit.html())
-        $('#editClone span.var').replaceWith(function() {return $(this).attr('data-value')})
-        $('#preHtml').text(editClone.html())
+        var editClone = $('<div>').html(edit.html())
+        editClone.find('span.var').replaceWith(function() {return $(this).attr('data-value')})
+        var html = editClone.html()
+        $('#preHtml').text(html)
         var notif = editClone.text()
         $('#preText').text(notif)
-        var newnotif = notif.replace(/\$\{(.+)\}/g, function(match, p1, offset, string) {
+        var newnotif = notif.replace(/\$\{([^${}]+)\}/g, function(match, p1, offset, string) {
           return `<span contenteditable="false" class="var" data-value="\${${p1}}" data-label="${revvars[p1]}">${revvars[p1]}</span>`
         })
         $('#editDuplicate').html(newnotif)
+        var newhtml = html.replace(/\$\{([^${}]+)\}/g, function(match, p1, offset, string) {
+          return `<span contenteditable="false" class="var" data-value="\${${p1}}" data-label="${revvars[p1]}">${revvars[p1]}</span>`
+        })
+        $('#htmlDuplicate').html(newhtml)
       }
       function hidePop() {
         var pbj = $('#pop-base')
