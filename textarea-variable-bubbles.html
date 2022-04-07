@@ -95,9 +95,7 @@
     <div id="htmlDuplicate" contenteditable="true"></div>
     <br>
     To be hidden popup: <br>
-    <span id="popBase">
-      <span contenteditable="true" class="filter">ok</span>
-      <div class="pop">
+    <span id="popBase"><span contenteditable="true" class="filter"> </span><div class="pop">
         <ul>
           <li data-value="loan.amount">Loan Amount</li>
           <li data-value="loan?.tenure">Tenure</li>
@@ -117,9 +115,7 @@
           <li data-value="loan.amount">Loan Amount</li>
           <li data-value="loan?.tenure">Tenure</li>
           <li data-value="customer.name">Customer Name</li>
-        </ul>
-      </div>
-    </span>
+        </ul></div></span>
     <script>
       var good = "some"
       var vars = {
@@ -153,6 +149,12 @@
           pbj.ready(() => {
             window.getSelection().empty()
             $('#pop-base .filter').focus()
+            var range = document.createRange()
+            var sel = window.getSelection()
+            range.setStart($('#pop-base .filter')[0], 1)
+            range.collapse()
+            sel.removeAllRanges()
+            sel.addRange(range)
           })
         }
       }
